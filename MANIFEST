@@ -1,0 +1,11 @@
+MANIFEST
+META.yml
+LICENSE
+README
+TODO
+Changes
+lib/Geo/Coordinates/RDNAP.pm
+t/from_rd.t
+t/pod.t
+Build.PL
+Makefile.PL
