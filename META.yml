@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Geo-Coordinates-RDNAP
-version: 0.01
+version: 0.02
 author:
   - Eugene van der Pijll
 abstract: |-
@@ -15,5 +15,5 @@ build_requires:
 provides:
   Geo::Coordinates::RDNAP:
     file: lib/Geo/Coordinates/RDNAP.pm
-    version: 0.01
+    version: 0.02
 generated_by: Module::Build version 0.2611

@@ -1,4 +1,5 @@
 MANIFEST
+MANIFEST.SKIP
 META.yml
 LICENSE
 README
@@ -6,6 +7,9 @@ TODO
 Changes
 lib/Geo/Coordinates/RDNAP.pm
 t/from_rd.t
+t/to_rd.t
 t/pod.t
+t/critic.t
+t/criticrc
 Build.PL
 Makefile.PL

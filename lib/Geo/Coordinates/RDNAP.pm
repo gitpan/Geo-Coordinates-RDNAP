@@ -1,9 +1,10 @@
 package Geo::Coordinates::RDNAP;
 
 use strict;
+use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 use Carp;
 use Params::Validate qw/validate BOOLEAN SCALAR/;
@@ -11,7 +12,7 @@ use Params::Validate qw/validate BOOLEAN SCALAR/;
 use Exporter;
 use vars qw/@ISA @EXPORT_OK/;
 @ISA = qw/Exporter/;
-@EXPORT_OK = qw/from_rd/;
+@EXPORT_OK = qw/from_rd to_rd/;
 
 my %a = (
     '01' => 3236.0331637,
@@ -25,7 +26,7 @@ my %a = (
     41 =>  0.0003314,
     '04' =>  0.0000371,
     42 =>  0.0000143,
-    24 => -0.0000090
+    24 => -0.0000090,
 );
 
 my %b = (
@@ -43,17 +44,45 @@ my %b = (
     15 =>  0.0000291,
 );
 
+my %c = (
+    '01' => 190066.98903,
+    11 => -11830.85831,
+    21 => -114.19754,
+    '03' => -32.38360,
+    31 => -2.34078,
+    13 => -0.60639,
+    23 => 0.15774,
+    41 => -0.04158,
+    '05' => -0.00661,
+);
+
+my %d = (
+    10 => 309020.31810,
+    '02' => 3638.36193,
+    12 => -157.95222,
+    20 => 72.97141,
+    30 => 59.79734,
+    22 => -6.43481,
+    '04' => 0.09351,
+    32 => -0.07379,
+    14 => -0.05419,
+    40 => -0.03444,
+);
+
 my %bessel = (
     a   => 6377397.155,
     e2  => 6674372e-9,
-    f_i => 299.1528128
+    f_i => 299.1528128,
 );
 
 my %etrs89 = (
     a   => 6378137,
     e2  => 6694380e-9,
-    f_i => 298.257222101
+    f_i => 298.257222101,
 );
+
+# Transformation parameters from Bessel to ETRS89 with respect to
+# Amersfoort.
 
 my %b2e = (
     tx  => 593.032,
@@ -62,13 +91,16 @@ my %b2e = (
     a   => 1.9848e-6,
     b   => -1.7439e-6,
     c   => 9.0587e-6,
-    d   => 4.0772e-6
+    d   => 4.0772e-6,
 );
 
+my %e2b = map {$_ => -$b2e{$_}} keys %b2e;
+
 my @amersfoort_b = ( 3903_453.148, 368_135.313, 5012_970.306 );
+my @amersfoort_e = ( 3904_046.180, 368_161.313, 5013_449.047 );
 
 sub from_rd {
-    croak "Geo::Coordinates::RDNAP::from_rd needs two or three arguments"
+    croak 'Geo::Coordinates::RDNAP::from_rd needs two or three arguments'
         if (@_ !=2 && @_ != 3);
 
     my ($x, $y, $h) = (@_, 0);
@@ -107,6 +139,52 @@ sub from_rd {
     return _cartesian_to_ellipsoid(@coords, \%etrs89);
 }
 
+sub to_rd {
+    croak 'Geo::Coordinates::RDNAP::to_rd needs two or three arguments'
+        if (@_ !=2 && @_ != 3);
+
+    my ($lat, $lon, $h) = (@_, 0);
+
+    # Use the approximated transformation.
+    # Step 1: spherical coords -> X, Y, Z
+    my @coords = _ellipsoid_to_cartesian($lat, $lon, $h, \%etrs89);
+
+    # Step 2: ETRS89 -> Bessel
+    @coords = _transform_datum( @coords, \%e2b, \@amersfoort_e );
+
+    # Step 3: X, Y, Z -> spherical coords
+    ($lat, $lon, $h) = _cartesian_to_ellipsoid(@coords, \%bessel);
+
+    # Step 4: Bessel -> RD'
+
+    # Convert to units of 10_000 secs; as deltas from Amersfoort.
+    $lat = ($lat * 3600 - ((52*60*60) + (9*60) + 22.178))/10_000;
+    $lon = ($lon * 3600 - ((5 *60*60) + (23*60) + 15.5))/10_000;
+
+    my $x = 155e3;
+    my $y = 463e3;
+
+    foreach my $i (keys %c) {
+        my ($m, $n) = split //, $i;
+        $x += $c{$i} * ($lat**$m) * ($lon**$n);
+    }
+
+    foreach my $i (keys %d) {
+        my ($m, $n) = split //, $i;
+        $y += $d{$i} * ($lat**$m) * ($lon**$n);
+    }
+
+    $x /= 1000;
+    $y /= 1000;
+
+    croak "Geo::Coordinates::RDNAP::to_rd: X out of bounds: $x"
+        if ($x < -7 or $x > 300);
+    croak "Geo::Coordinates::RDNAP::to_rd: Y out of bounds: $y"
+        if ($y < 289 or $y > 629);
+
+    return ($x, $y, $h);
+}
+
 sub _to_rads {
     return $_[0] * 2*3.14159_26535_89793 /360;
 }
@@ -126,6 +204,8 @@ sub _ellipsoid_to_cartesian {
             ($n+$h)*$cosphi*sin(_to_rads($lon)),
             ($n*(1-$para->{e2})+$h)*$sinphi );
 }
+
+# Returns (lat, lon, h) in degrees.
 
 sub _cartesian_to_ellipsoid {
     my ($x, $y, $z, $para) = @_;
@@ -180,7 +260,6 @@ Geo::Coordinates::RDNAP - convert to/from Dutch RDNAP coordinate system
 
   # lat/lon coordinates in degrees; height in meters
   # my ($x, $y, $h) = Geo::Coordinates::RD-NAP::to_rd( 52.75, 6.80, 10 );
-  # (NOT YET IMPLEMENTED!)
 
 =head1 DESCRIPTION
 
