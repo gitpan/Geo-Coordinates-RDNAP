@@ -8,7 +8,9 @@ Changes
 lib/Geo/Coordinates/RDNAP.pm
 t/from_rd.t
 t/to_rd.t
+t/convert.t
 t/pod.t
+t/pod-coverage.t
 t/critic.t
 t/criticrc
 Build.PL

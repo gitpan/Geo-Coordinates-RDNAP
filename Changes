@@ -1,5 +1,8 @@
 Revision history for Perl module Geo::Coordinates::RD-NAP
 
+0.03  2006-08-13
+    - added deg, dms functions
+
 0.02  2006-03-09
     - added to_rd function
 

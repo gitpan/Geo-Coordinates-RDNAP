@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 use Carp;
 use Params::Validate qw/validate BOOLEAN SCALAR/;
@@ -12,7 +12,21 @@ use Params::Validate qw/validate BOOLEAN SCALAR/;
 use Exporter;
 use vars qw/@ISA @EXPORT_OK/;
 @ISA = qw/Exporter/;
-@EXPORT_OK = qw/from_rd to_rd/;
+@EXPORT_OK = qw/from_rd to_rd deg dms/;
+
+sub deg {
+    my (@in) = @_;
+    my @out;
+
+    while (my($d, $m, $s) = splice (@in, 0, 3)) {
+        push @out, $d + ($m||0)/60 + ($s||0)/3600;
+    }
+    return @out;
+}
+
+sub dms {
+    return map {int($_), int($_*60)%60, ($_-int($_*60)/60)*3600} @_;
+}
 
 my %a = (
     '01' => 3236.0331637,
@@ -253,13 +267,17 @@ Geo::Coordinates::RDNAP - convert to/from Dutch RDNAP coordinate system
 
 =head1 SYNOPSIS
 
-  use Geo::Coordinates::RDNAP qw/from_rd/;
+  use Geo::Coordinates::RDNAP qw/from_rd to_rd dd dms/;
 
   # RD coordinates in km; height in meters
   my ($lat, $lon, $h) = from_rd( 150, 480, -2.75 );
 
-  # lat/lon coordinates in degrees; height in meters
-  # my ($x, $y, $h) = Geo::Coordinates::RD-NAP::to_rd( 52.75, 6.80, 10 );
+  printf "%d %d' %.2f\" %d %d' %.2f\"", dms($lat, $lon);
+
+  lat/lon coordinates in degrees; height in meters
+  my ($x, $y, $h) = to_rd( 52.75, 6.80, 10 );
+
+  # equivalent: to_rd( deg(52,45,0, 6,48,0), 10 );
 
 =head1 DESCRIPTION
 
@@ -322,6 +340,27 @@ this area, X should roughly be between 0 and 300, and Y between 300 and 650.
 The output is a list of three numbers: latitude and longitude in
 degrees, according to the ETRS89 coordinate system, and height above the
 ETRS89 reference geoid, in meters.
+
+=item to_rd( $lat, $lon, $h )
+
+Converts geegraphical coordinates to coordinates in the RD-NAP
+coordinate system. The input are the latituse and longitude in degrees,
+and optionally the height above the ETRS89 reference geoid in meters.
+
+This should only be used for points in or close to the Netherlands.
+
+The output is a list of three numbers: X and Y in the RD system in
+kilometers, and the height above NAP in meters.
+
+=item deg
+
+Helper function to convert degrees/minutes/seconds to decimal degrees.
+Works only for positive latitude and longitude.
+
+=item dms
+
+Helper function to convert decimal degrees to degrees/minutes/seconds.
+Works only for positive latitude and longitude.
 
 =back
 
