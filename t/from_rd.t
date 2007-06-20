@@ -25,7 +25,7 @@ for (@table) {
     $lon =~ /^(.)(..)(..)(.*)$/;
     $lon = $1+$2/60+("$3.$4"/3600);
 
-    my @coord = from_rd( $x, $y, $z);
+    my @coord = from_rd( $x*1000, $y*1000, $z);
 
     # Error should be < ~30 cm in latitude and longitude.
     # Error in h is only accurate to the meter.

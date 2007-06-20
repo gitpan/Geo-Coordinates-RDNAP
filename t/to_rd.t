@@ -30,7 +30,7 @@ for (@table) {
     # Error should be < ~30 cm in x and y.
     # Error in h is only accurate to the meter.
 
-    ok(abs($coord[0] - $x) < 3e-4, "X $name");
-    ok(abs($coord[1] - $y) < 3e-4, "Y $name");
+    ok(abs($coord[0] - $x*1000) < 3e-1, "X $name");
+    ok(abs($coord[1] - $y*1000) < 3e-1, "Y $name");
     ok(abs($coord[2] - $z) < 1, "Height $name");
 }

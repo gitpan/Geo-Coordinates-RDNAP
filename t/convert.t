@@ -20,3 +20,7 @@ is(0+sprintf("%.5f",$z),44.16,"Seconds");
 my ($d1, $d2) = deg(52, 33, 18, 6, 20, 44.16);
 cmp_ok(abs($d1 - 52.555),'<',1e6,"d1");
 cmp_ok(abs($d2 - 6.3456),'<',1e6,"d2");
+
+# Scalar
+my $d3 = deg(52, 33, 18);
+cmp_ok(abs($d3 - 52.555),'<',1e6,"d3 (scalar)");

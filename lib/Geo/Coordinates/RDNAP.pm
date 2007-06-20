@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.03';
+$VERSION = '0.10';
 
 use Carp;
 use Params::Validate qw/validate BOOLEAN SCALAR/;
@@ -120,15 +120,15 @@ sub from_rd {
     my ($x, $y, $h) = (@_, 0);
 
     croak "Geo::Coordinates::RDNAP::from_rd: X out of bounds: $x"
-        if ($x < -7 or $x > 300);
+        if ($x < -7_000 or $x > 300_000);
     croak "Geo::Coordinates::RDNAP::from_rd: Y out of bounds: $y"
-        if ($y < 289 or $y > 629);
+        if ($y < 289_000 or $y > 629_000);
 
     # Use the approximated transformation.
     # Step 1: RD -> Bessel (spherical coords)
 
-    $x = ($x/100) - 1.55;
-    $y = ($y/100) - 4.63;
+    $x = ($x/100_000) - 1.55;
+    $y = ($y/100_000) - 4.63;
 
     my $lat = (52*60*60) + (9*60) + 22.178;
     my $lon = (5 *60*60) + (23*60) + 15.5;
@@ -188,13 +188,10 @@ sub to_rd {
         $y += $d{$i} * ($lat**$m) * ($lon**$n);
     }
 
-    $x /= 1000;
-    $y /= 1000;
-
     croak "Geo::Coordinates::RDNAP::to_rd: X out of bounds: $x"
-        if ($x < -7 or $x > 300);
+        if ($x < -7_000 or $x > 300_000);
     croak "Geo::Coordinates::RDNAP::to_rd: Y out of bounds: $y"
-        if ($y < 289 or $y > 629);
+        if ($y < 289_000 or $y > 629_000);
 
     return ($x, $y, $h);
 }
@@ -269,7 +266,7 @@ Geo::Coordinates::RDNAP - convert to/from Dutch RDNAP coordinate system
 
   use Geo::Coordinates::RDNAP qw/from_rd to_rd dd dms/;
 
-  # RD coordinates in km; height in meters
+  # RD coordinates and height in meters
   my ($lat, $lon, $h) = from_rd( 150, 480, -2.75 );
 
   printf "%d %d' %.2f\" %d %d' %.2f\"", dms($lat, $lon);
@@ -290,8 +287,9 @@ longitude) and meters (height above the reference ellipsoid).
 RD-NAP is a Dutch coordinate system, consisting of the X and Y
 coordinates of the Rijksdriehoekmeting, used e.g. in topographical maps,
 and a Z coordinate which is the height above Normaal Amsterdams Peil,
-the mean sea level at Amsterdam. X and Y are expressed in kilometers,
-and Z in meters.
+the mean sea level at Amsterdam. X, Y, and Z are all expressed in
+kilometers (this is a change compared to the previous versions of this
+module!)
 
 These transformations should only be used for locations in or close to
 the Netherlands.
@@ -332,10 +330,11 @@ the official transformation software, visit http://www.rdnap.nl.
 
 Converts coordinates in the RD-NAP coordinate system to geographical
 coordinates. The input are the X and Y coordinates in the RD system,
-given in kilometers, and optionally the height above NAP in meters.
+given in meters, and optionally the height above NAP in meters.
 
 This should only be used for points in or close to the Netherlands. For
-this area, X should roughly be between 0 and 300, and Y between 300 and 650.
+this area, X should roughly be between 0 and 300_000, and Y between
+300_000 and 650_000.
 
 The output is a list of three numbers: latitude and longitude in
 degrees, according to the ETRS89 coordinate system, and height above the
@@ -350,7 +349,7 @@ and optionally the height above the ETRS89 reference geoid in meters.
 This should only be used for points in or close to the Netherlands.
 
 The output is a list of three numbers: X and Y in the RD system in
-kilometers, and the height above NAP in meters.
+meters, and the height above NAP in meters.
 
 =item deg
 
