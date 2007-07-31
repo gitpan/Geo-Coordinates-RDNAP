@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 use Carp;
 use Params::Validate qw/validate BOOLEAN SCALAR/;
@@ -267,7 +267,7 @@ Geo::Coordinates::RDNAP - convert to/from Dutch RDNAP coordinate system
   use Geo::Coordinates::RDNAP qw/from_rd to_rd dd dms/;
 
   # RD coordinates and height in meters
-  my ($lat, $lon, $h) = from_rd( 150, 480, -2.75 );
+  my ($lat, $lon, $h) = from_rd( 150_000, 480_000, -2.75 );
 
   printf "%d %d' %.2f\" %d %d' %.2f\"", dms($lat, $lon);
 
@@ -284,12 +284,12 @@ approximately equal to the international reference frame WGS84.
 GPS data. Coordinates in ETRS89 are given in degrees (latitude and
 longitude) and meters (height above the reference ellipsoid).
 
-RD-NAP is a Dutch coordinate system, consisting of the X and Y
-coordinates of the Rijksdriehoekmeting, used e.g. in topographical maps,
-and a Z coordinate which is the height above Normaal Amsterdams Peil,
-the mean sea level at Amsterdam. X, Y, and Z are all expressed in
-kilometers (this is a change compared to the previous versions of this
-module!)
+RD-NAP (or "Amersfoort datum") is a Dutch coordinate system, consisting
+of the X and Y coordinates of the Rijksdriehoekmeting, used e.g. in
+topographical maps, and a Z coordinate which is the height above Normaal
+Amsterdams Peil, the mean sea level at Amsterdam. X, Y, and Z are all
+expressed in meters (this is a change compared to the previous versions
+of this module!)
 
 These transformations should only be used for locations in or close to
 the Netherlands.
@@ -359,7 +359,16 @@ Works only for positive latitude and longitude.
 =item dms
 
 Helper function to convert decimal degrees to degrees/minutes/seconds.
-Works only for positive latitude and longitude.
+Works only for positive latitude and longitude. The returned degrees and
+minutes are integers; the returned number of seconds can be fractional.
+
+When rounding the number of seconds, remember that it wraps at 60 (and
+so does the number of minutes). One easy way (but perhaps not the
+fastest) of taking this into account is the following piece of code:
+
+    ($d, $m, $s) = dms($degrees);
+    $s = int($s + 0.5);
+    ($d, $m, $s) = map {sprintf "%.0f"} dms(deg($d, $m, $s));
 
 =back
 
